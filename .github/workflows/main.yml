@@ -1,0 +1,38 @@
+name: Build DLL
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Install imgui
+        run: |
+          mkdir imgui
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/imgui.h" -OutFile "imgui/imgui.h"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/imgui.cpp" -OutFile "imgui/imgui.cpp"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/imgui_draw.cpp" -OutFile "imgui/imgui_draw.cpp"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/imgui_tables.cpp" -OutFile "imgui/imgui_tables.cpp"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/imgui_widgets.cpp" -OutFile "imgui/imgui_widgets.cpp"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/backends/imgui_impl_win32.h" -OutFile "imgui/imgui_impl_win32.h"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/backends/imgui_impl_win32.cpp" -OutFile "imgui/imgui_impl_win32.cpp"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/backends/imgui_impl_dx11.h" -OutFile "imgui/imgui_impl_dx11.h"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ocornut/imgui/master/backends/imgui_impl_dx11.cpp" -OutFile "imgui/imgui_impl_dx11.cpp"
+        shell: powershell
+
+      - name: Configure CMake
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: xwrapper-dll
+          path: build/Release/xwrapper.dll
